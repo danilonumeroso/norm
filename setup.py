@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="norm",
-    version="0.7.0",
+    version="0.7.1",
     author="Danilo Numeroso",
     author_email="danilo.numeroso@phd.unipi.it",
     description="Set of utilities for managing ML experiments.",
