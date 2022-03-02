@@ -1,11 +1,11 @@
 from ._run import Run
 from ._validation import run_valid as validate_run
 from ._test import run_test
+from norm._typings import BaseLoader
+from norm import get_date
+from norm.io import dump
 from pathlib import Path
 from typing import Callable, List
-from utils import get_date
-from utils.data import Loader
-from utils.io import dump
 
 
 def get_name():
@@ -96,8 +96,8 @@ class Experiment:
 
 
 def validate(experiment: Experiment,
-             tr_set: Loader,
-             vl_set: Loader,
+             tr_set: BaseLoader,
+             vl_set: BaseLoader,
              save_path: Path) -> Run:
 
     if len(experiment.runs) == 1:
@@ -136,9 +136,9 @@ def validate(experiment: Experiment,
 
 
 def run_exp(experiment: Experiment,
-            tr_set: Loader,
-            vl_set: Loader,
-            ts_set: Loader,
+            tr_set: BaseLoader,
+            vl_set: BaseLoader,
+            ts_set: BaseLoader,
             save_path: Path):
 
     best_run = validate(experiment=experiment,

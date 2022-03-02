@@ -1,16 +1,16 @@
 from ._run import Run
+from norm._typings import BaseLoader
+from norm.io import dump
 from typing import Callable
 from pathlib import Path
 from rich.pretty import pprint as log
 from statistics import mean, stdev
-from utils.data import Loader
-from utils.io import dump
 
 
 def run_test(run: Run,
              evaluate_fn: Callable,
-             tr_set: Loader,
-             ts_set: Loader,
+             tr_set: BaseLoader,
+             ts_set: BaseLoader,
              save_path: Path,
              num_trials: int = 5,
              higher_is_better: bool = True):
