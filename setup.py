@@ -23,5 +23,10 @@ setuptools.setup(
     package_dir={"": "code"},
     packages=setuptools.find_packages(where="code"),
     python_requires=">=3.8",
-    install_requires=["numpy >= 1.21", "matplotlib >= 3.0"]
+    install_requires=[
+        "matplotlib >= 3.0",
+        "numpy >= 1.21",
+        "randomname",
+        "ray >= 1.9.2"
+    ]
 )
