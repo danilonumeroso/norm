@@ -38,9 +38,20 @@ def _load_txt(path: Path) -> str:
     return str(f.read())
 
 
+def _dump_torch(obj: Any, path: Path):
+    from torch import save
+
+    save(obj, path)
+
+
+def _load_torch(path: Path) -> Any:
+    raise NotImplementedError()
+
+
 IO_HELPERS = {
     'json': (_dump_json, _load_json),
     'pkl': (_dump_bin, _load_bin),
     'pickle': (_dump_bin, _load_bin),
-    'txt': (_dump_txt, _load_txt)
+    'txt': (_dump_txt, _load_txt),
+    'pth': (_dump_torch, _load_torch)
 }

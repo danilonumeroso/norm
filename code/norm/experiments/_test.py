@@ -10,13 +10,13 @@ from statistics import mean, stdev
 def run_test(run: Run,
              evaluate_fn: Callable,
              tr_set: BaseLoader,
+             vl_set: BaseLoader,
              ts_set: BaseLoader,
              save_path: Path,
              num_trials: int = 5,
              higher_is_better: bool = True):
 
     is_better = lambda a, b: a > b if higher_is_better else a < b  # noqa: E731
-    is_best = lambda a, b: a > max(b) if higher_is_better else a < min(b)  # noqa: E731
 
     LOW_ = 0.0
     HIGH_ = 1e4
@@ -24,7 +24,7 @@ def run_test(run: Run,
     def closure():
         model = run.model_fn()
         best = LOW_ if higher_is_better else HIGH_
-        losses, tr_scores, ts_scores = [], [], []
+        losses, tr_scores, vl_scores = [], [], []
 
         for step in range(1, run.train_steps+1):
             feedback = tr_set.next(run.batch_size)
@@ -33,10 +33,10 @@ def run_test(run: Run,
 
             if step % run.log_every == 0:
                 tr_stats = evaluate_fn(model, feedback, extras={'step': step, 'loss': loss})
-                ts_stats = evaluate_fn(model, ts_set.next(), extras={'step': step}, verbose=run.verbose)
+                vl_stats = evaluate_fn(model, vl_set.next(), extras={'step': step})
 
                 tr_scores.append(tr_stats)
-                ts_scores.append(ts_stats)
+                vl_scores.append(vl_stats)
 
                 log(dict(
                     **{
@@ -44,38 +44,36 @@ def run_test(run: Run,
                         for key, item in tr_stats.items()
                     },
                     **{
-                        f'ts_{key}': item
-                        for key, item in ts_stats.items()
+                        f'vl_{key}': item
+                        for key, item in vl_stats.items()
                     }
                 ))
 
-                if is_better(ts_stats['score'], best):
-                    best = ts_stats['score']
-                    best_score[trial] = best
-                    model.dump_model(save_path / f'model_{trial}.pth')
+                if is_better(vl_stats['score'], best):
+                    best = vl_stats['score']
+                    dump(model.net_.state_dict(), save_path / 'test_run' / f'model_{trial}.pth')
 
-                if is_best(best, best_score):
-                    dump(dict(
-                        trial=trial+1,
-                        **ts_stats,
-                    ), save_path / 'test_stats.json')
-                    model.dump_model(save_path / 'model.pth')
+        return losses, tr_scores, vl_scores
 
-        return losses, tr_scores, ts_scores
-
-    losses, tr_scores, ts_scores, best_score = [], [], [], [LOW_ if higher_is_better else HIGH_]*5
+    losses, tr_scores, vl_scores, ts_stats, ts_scores = [], [], [], [], []
 
     for trial in range(num_trials):
-        loss, tr_score, ts_score = closure()
+        loss, tr_score, vl_score = closure()
         losses.append(loss)
         tr_scores.append(tr_score)
-        ts_scores.append(ts_score)
+        vl_scores.append(vl_score)
+
+        model = run.model_fn()
+        model.restore_model(save_path / 'test_run' / f'model_{trial}.pth', 'cpu')
+        ts_stats.append(evaluate_fn(model, ts_set.next(), verbose=True))
+        ts_scores.append(ts_stats[-1]['score'])
 
     dump(dict(
         loss=losses,
         num_trials=num_trials,
         tr_scores=tr_scores,
-        ts_scores=ts_scores,
-        mean_score=mean(best_score),
-        std_score=stdev(best_score) if num_trials > 1 else 0
+        vl_scores=vl_scores,
+        ts_stats=ts_stats,
+        mean_score=mean(ts_scores),
+        std_score=stdev(ts_scores) if num_trials > 1 else 0
     ), save_path / 'test_info.json')
