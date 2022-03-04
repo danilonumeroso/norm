@@ -65,7 +65,7 @@ def run_test(run: Run,
 
         model = run.model_fn()
         model.restore_model(save_path / 'test_run' / f'model_{trial}.pth', 'cpu')
-        ts_stats.append(evaluate_fn(model, ts_set.next(), verbose=True))
+        ts_stats.append(evaluate_fn(model, ts_set.next()))
         ts_scores.append(ts_stats[-1]['score'])
 
     dump(dict(

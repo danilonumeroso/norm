@@ -5,9 +5,14 @@ from typing import Any
 def _dump_json(obj: Any, path: Path):
     import json
 
-    json.dump(obj,
-              path.open("w"),
-              indent=2)
+    try:
+        json.dump(obj,
+                  path.open("w"),
+                  indent=2)
+    except TypeError as ex:
+        _dump_txt(obj, path)
+        print(f"Unable to dump obj in json format because of the following exception: {ex}")
+        print("Obj dumped as string")
 
 
 def _load_json(path: Path) -> Any:
