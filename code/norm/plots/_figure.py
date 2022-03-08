@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from ._line_style import LineStyle
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from numpy import array
+from numpy.typing import NDArray
 
 _ALPHA = 0.25
+
+FloatArray = Union[List[float], NDArray[float]]
 
 @dataclass(init=True)
 class Line:
     x_data: List[float]
     y_data: List[float]
-    std_error: Optional[List[float]]
+    std_error: Optional[List[float], NDArray[float]]
     color: str
     style: LineStyle
     label: str
@@ -34,17 +37,22 @@ class Figure:
     dpi: int
 
     def add_line(self,
-                 x_data: List[float],
-                 y_data: List[float],
+                 x_data: FloatArray,
+                 y_data: FloatArray,
                  label: Optional[str] = "",
-                 std_error: Optional[List[float]] = None,
+                 std_error: Optional[FloatArray] = None,
                  color: Optional[str] = None,
                  style: Optional[LineStyle] = LineStyle.Simple) -> Figure:
+
+        assert len(x_data) == len(y_data), "Size mismatch"
+
+        if std_error is not None:
+            assert len(x_data) == len(std_error)
 
         self.lines.append(
             Line(array(x_data),
                  array(y_data),
-                 array(std_error) if std_error else None,
+                 array(std_error) if std_error is not None else None,
                  color,
                  style,
                  label)

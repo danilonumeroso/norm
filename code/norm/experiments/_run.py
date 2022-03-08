@@ -39,6 +39,8 @@ def init_runs(num_runs: int,
     search = partial(random_search, num_samples=num_runs)
     runs = list()
 
+    # TODO: create list of seeds, one for each run.
+
     for i, (m_conf, o_conf) in enumerate(zip(search(model_configs), search(optim_configs))):
 
         model_fn = partial(model_fn,
