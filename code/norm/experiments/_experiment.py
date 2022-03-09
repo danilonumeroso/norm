@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable, List
 
 NOT_DEFINED = "ND"
-
+RESUME_EXP_DIR = "__experiment_status__"
 
 def get_name():
     from randomname import generate
@@ -80,12 +80,11 @@ def _save_and_interrupt(exp, remotes, completed_runs, uncompleted_runs, save_pat
         r_status[run_name] = id in completed_runs
         r_scores[run_name] = ray.get(id) if id in completed_runs else NOT_DEFINED
 
-    dir_name = "__experiment_status__"
-    dump(r_status, save_path / exp.name / dir_name / 'runs.status.json')
-    dump(r_scores, save_path / exp.name / dir_name / 'runs.scores.json')
+    dump(r_status, save_path / exp.name / RESUME_EXP_DIR / 'runs.status.json')
+    dump(r_scores, save_path / exp.name / RESUME_EXP_DIR / 'runs.scores.json')
 
     exp._fire = None
-    dump(exp, save_path / exp.name / dir_name / 'experiment.status.pkl')
+    dump(exp, save_path / exp.name / RESUME_EXP_DIR / 'experiment.status.pkl')
 
 
 class Experiment:
@@ -195,10 +194,9 @@ def run_exp(experiment: Experiment,
 
 
 def resume_exp(experiment_path: Path) -> Experiment:
-    dir_name = "__experiment_status__"
-    r_status = load(experiment_path / dir_name / 'runs.status.json')
-    r_scores = load(experiment_path / dir_name / 'runs.scores.json')
-    exp = load(experiment_path / dir_name / 'experiment.status.pkl')
+    r_status = load(experiment_path / RESUME_EXP_DIR / 'runs.status.json')
+    r_scores = load(experiment_path / RESUME_EXP_DIR / 'runs.scores.json')
+    exp = load(experiment_path / RESUME_EXP_DIR / 'experiment.status.pkl')
 
     if not exp.sequential:
         _init_ray(exp.num_cpus, exp.num_gpus, exp.nw)
@@ -217,5 +215,7 @@ def resume_exp(experiment_path: Path) -> Experiment:
         raise NotImplementedError("Resume is not yet implemented for sequential experiments.")
         exp._fire = validate_run
 
-    # TODO: remove __experiment_status__ directory
+    from shutil import rmtree
+    rmtree(experiment_path / RESUME_EXP_DIR)
+
     return exp
