@@ -1,5 +1,6 @@
 from ._run import Run
 from norm._typings import BaseLoader
+from norm import set_seed
 from norm.io import dump
 from pathlib import Path
 from rich.pretty import pprint as log
@@ -20,11 +21,13 @@ def run_valid(run: Run,
               num_trials: int = 1,
               higher_is_better: bool = True) -> float:
 
+    set_seed(run.seed)
     is_better = lambda a, b: a > b if higher_is_better else a < b  # noqa: E731
     log(run.config)
 
-    LOW_ = 0.0
     HIGH_ = 1e4
+    LOW_ = -HIGH_
+
 
     def closure():
         model = run.model_fn()
@@ -65,6 +68,8 @@ def run_valid(run: Run,
                     print("early stopping...")
                     break
 
+
+
         return losses, tr_scores, vl_scores, best_score
 
     losses, tr_scores, vl_scores, best_score = [], [], [], []
@@ -78,6 +83,7 @@ def run_valid(run: Run,
 
     dump(dict(
         name=run.name,
+        seed=run.seed,
         loss=losses,
         num_trials=num_trials,
         tr_scores=tr_scores,

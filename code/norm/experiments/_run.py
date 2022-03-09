@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict
 @dataclass(init=True, eq=True, frozen=True)
 class Run:
     name: str
+    seed: int
     batch_size: int
     model_fn: Callable[[Any], Model]
     config: Dict[str, Any]
@@ -23,6 +24,7 @@ def init_runs(num_runs: int,
               hp_space: Dict,
               model_fn: Callable[[Any], Model],
               optim_fn: Callable[[Any], Optimizer],
+              seed: int,
               batch_size: int,
               early_stop: bool,
               early_stop_patience: int,
@@ -39,6 +41,9 @@ def init_runs(num_runs: int,
     search = partial(random_search, num_samples=num_runs)
     runs = list()
 
+    # TODO: create list of seeds, one for each run.
+    seeds = [seed + i for i in range(num_runs)]
+
     for i, (m_conf, o_conf) in enumerate(zip(search(model_configs), search(optim_configs))):
 
         model_fn = partial(model_fn,
@@ -46,6 +51,7 @@ def init_runs(num_runs: int,
                            optim_fn=partial(optim_fn, **o_conf))
 
         run_ = Run(name=f'run_{i}',
+                   seed=seeds[i],
                    config={**m_conf, **o_conf},
                    model_fn=model_fn,
                    batch_size=batch_size,
