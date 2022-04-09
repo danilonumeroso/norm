@@ -78,7 +78,7 @@ def run_valid(run: Run,
         loss, tr_score, vl_score, score = closure()
         losses.append(loss)
         tr_scores.append(tr_score)
-        vl_score.append(vl_score)
+        vl_scores.append(vl_score)
         best_score.append(score)
 
     dump(dict(

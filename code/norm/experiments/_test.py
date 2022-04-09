@@ -33,7 +33,7 @@ def run_test(run: Run,
 
             if step % run.log_every == 0:
                 tr_stats = evaluate_fn(model, feedback, extras={'step': step, 'loss': loss})
-                vl_stats = evaluate_fn(model, vl_set.next(), extras={'step': step})
+                vl_stats = evaluate_fn(model, vl_set.next(), extras={'step': step}, verbose=run.verbose)
 
                 tr_scores.append(tr_stats)
                 vl_scores.append(vl_stats)
