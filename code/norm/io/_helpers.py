@@ -53,10 +53,22 @@ def _load_torch(path: Path) -> Any:
     raise NotImplementedError()
 
 
+def _dump_yaml(obj: Any, path: Path):
+    raise NotImplementedError()
+
+def _load_yaml(path: Path) -> Any:
+    import yaml
+
+    return yaml.safe_load(open(path, 'r'))
+
+
+
 IO_HELPERS = {
     'json': (_dump_json, _load_json),
     'pkl': (_dump_bin, _load_bin),
     'pickle': (_dump_bin, _load_bin),
     'txt': (_dump_txt, _load_txt),
-    'pth': (_dump_torch, _load_torch)
+    'pth': (_dump_torch, _load_torch),
+    'yaml': (_dump_yaml, _load_yaml),
+    'yml': (_dump_yaml, _load_yaml)
 }

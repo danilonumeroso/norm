@@ -10,6 +10,7 @@ from typing import Callable, List
 NOT_DEFINED = "ND"
 RESUME_EXP_DIR = "__experiment_status__"
 
+
 def get_name():
     from randomname import generate
     return generate('v/programming', 'n/algorithms')
@@ -92,6 +93,7 @@ class Experiment:
                  runs: List[Run],
                  evaluate_fn: Callable,
                  save_path: Path,
+                 name: str = '',
                  num_cpus: int = 1,
                  num_gpus: int = 0,
                  num_valid_trials: int = 1,
@@ -123,13 +125,11 @@ class Experiment:
         else:
             self._fire = validate_run
 
-        # make sure to generate a unique id for the experiment (try up to 10 possible names)
-        for _ in range(10):
-            self.name = get_name()
-            if not (save_path / self.name).exists():
-                break
+        self.name = name + '-' + get_name()
 
-        assert not (save_path / self.name).exists(), f"Experiment '{self.name}' already existing."
+        if (save_path / self.name).exists():
+            print(f"[warning]: experiment {self.name} already existing.")
+            self.name += "-new"
 
 
 def validate(experiment: Experiment,
