@@ -5,6 +5,7 @@ from norm._typings import BaseLoader
 from norm import get_date
 from norm.io import dump, load
 from pathlib import Path
+from statistics import mean, stdev
 from typing import Callable, List
 
 NOT_DEFINED = "ND"
@@ -58,6 +59,9 @@ def _run_par(exp, tr_set, vl_set, save_path):
             score = ray.get(id_)
             if is_better(score, best_score):
                 best_score, best_run = score, run_
+
+            ray.cancel(id_, force=True)
+
     except KeyboardInterrupt:
         print('Received a Keyboard Interrupt, saving current state...')
         completed, uncompleted = ray.wait(list(remotes.keys()), timeout=1)
@@ -183,14 +187,54 @@ def run_exp(experiment: Experiment,
                         vl_set=vl_set,
                         save_path=save_path)
 
-    run_test(run=best_run,
-             evaluate_fn=experiment.evaluate_fn,
-             tr_set=tr_set,
-             vl_set=vl_set,
-             ts_set=ts_set,
-             num_trials=experiment.num_test_trials,
-             higher_is_better=experiment.higher_is_better,
-             save_path=save_path / experiment.name)
+    if experiment.sequential:
+        res = run_test(run=best_run,
+                       evaluate_fn=experiment.evaluate_fn,
+                       tr_set=tr_set,
+                       vl_set=vl_set,
+                       ts_set=ts_set,
+                       num_trials=experiment.num_test_trials,
+                       higher_is_better=experiment.higher_is_better,
+                       save_path=save_path / experiment.name / 'trials')
+
+        res['mean_score'] = mean(res['ts_scores'])
+        res['std_score'] = stdev(res['ts_scores']) if experiment.num_test_trials > 1 else 0
+
+    else:
+        import ray
+
+        @ray.remote(num_cpus=1, num_gpus=1/experiment.nw)
+        def test(*args, **kwargs) -> float:
+            return run_test(*args, **kwargs)
+
+        remotes = []
+        for i in range(experiment.num_test_trials):
+            id_ = test.remote(run=best_run,
+                              evaluate_fn=experiment.evaluate_fn,
+                              tr_set=tr_set,
+                              vl_set=vl_set,
+                              ts_set=ts_set,
+                              num_trials=1,
+                              higher_is_better=experiment.higher_is_better,
+                              save_path=save_path / experiment.name / f'trial_{i}')
+            remotes.append(id_)
+
+        res = {}
+        for id_ in remotes:
+            res_trial = ray.get(id_)
+            if not res:
+                res = res_trial
+            else:
+                for key in res.keys():
+                    if not isinstance(res[key], list):
+                        continue
+
+                    res[key].extend(res_trial[key])
+
+        res['mean_score'] = mean(res['ts_scores'])
+        res['std_score'] = stdev(res['ts_scores']) if experiment.num_test_trials > 1 else 0
+
+    dump(res, save_path / experiment.name / 'test_info.json')
 
 
 def resume_exp(experiment_path: Path) -> Experiment:

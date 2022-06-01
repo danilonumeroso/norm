@@ -41,7 +41,7 @@ def run_valid(run: Run,
             losses.append(loss)
 
             if step % run.log_every == 0:
-                tr_stats = evaluate_fn(model, feedback, extras={'step': step, 'loss': loss})
+                tr_stats = evaluate_fn(model, feedback, extras={'step': step, 'loss': loss}, verbose=run.verbose)
                 vl_stats = evaluate_fn(model, vl_set.next(), extras={'step': step}, verbose=run.verbose)
 
                 tr_scores.append(tr_stats)

@@ -32,6 +32,8 @@ class Figure:
     y_ticks: List[float]
     x_lim: Tuple[int, int]
     y_lim: Tuple[int, int]
+    x_scale: str
+    y_scale: str
     has_legend: bool
     fontsize: Optional[str]
     dpi: int
@@ -88,6 +90,12 @@ class Figure:
             if self.has_legend:
                 plt.legend(fontsize=self.fontsize)
 
+            if self.y_scale == "log":
+                plt.yscale(self.y_scale, base=2)
+
+            if self.x_scale == "log":
+                plt.xscale(self.x_scale, base=2)
+
             if save:
                 plt.savefig(f'{self.name}.png', dpi=self.dpi)
             if show:
@@ -105,6 +113,8 @@ def new_figure(name: str,
                y_ticks: Optional[List[float]] = None,
                x_lim: Optional[Tuple[int, int]] = None,
                y_lim: Optional[Tuple[int, int]] = None,
+               x_scale: Optional[str] = "linear",
+               y_scale: Optional[str] = "linear",
                has_legend: Optional[bool] = False,
                fontsize: Optional[str] = "x-large",
                dpi: Optional[int] = 300) -> Figure:
@@ -118,6 +128,8 @@ def new_figure(name: str,
                   y_ticks=y_ticks,
                   x_lim=x_lim if x_lim else (None, None),
                   y_lim=y_lim if y_lim else (None, None),
+                  x_scale=x_scale,
+                  y_scale=y_scale,
                   has_legend=has_legend,
                   fontsize=fontsize,
                   dpi=dpi,

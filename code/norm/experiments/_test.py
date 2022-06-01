@@ -4,7 +4,6 @@ from norm.io import dump
 from typing import Callable
 from pathlib import Path
 from rich.pretty import pprint as log
-from statistics import mean, stdev
 
 
 def run_test(run: Run,
@@ -14,6 +13,7 @@ def run_test(run: Run,
              ts_set: BaseLoader,
              save_path: Path,
              num_trials: int = 5,
+             name: str = '',
              higher_is_better: bool = True):
 
     is_better = lambda a, b: a > b if higher_is_better else a < b  # noqa: E731
@@ -51,7 +51,7 @@ def run_test(run: Run,
 
                 if is_better(vl_stats['score'], best):
                     best = vl_stats['score']
-                    dump(model.net_.state_dict(), save_path / 'test_run' / f'model_{trial}.pth')
+                    dump(model.net_.state_dict(), save_path / f'model_{trial}.pth')
 
         return losses, tr_scores, vl_scores
 
@@ -64,16 +64,14 @@ def run_test(run: Run,
         vl_scores.append(vl_score)
 
         model = run.model_fn()
-        model.restore_model(save_path / 'test_run' / f'model_{trial}.pth', 'cpu')
+        model.restore_model(save_path / f'model_{trial}.pth', 'cpu')
         ts_stats.append(evaluate_fn(model, ts_set.next()))
         ts_scores.append(ts_stats[-1]['score'])
 
-    dump(dict(
+    return dict(
         loss=losses,
         num_trials=num_trials,
         tr_scores=tr_scores,
         vl_scores=vl_scores,
-        ts_stats=ts_stats,
-        mean_score=mean(ts_scores),
-        std_score=stdev(ts_scores) if num_trials > 1 else 0
-    ), save_path / 'test_info.json')
+        ts_scores=ts_scores,
+        ts_stats=ts_stats)
