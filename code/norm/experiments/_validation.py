@@ -28,7 +28,6 @@ def run_valid(run: Run,
     HIGH_ = 1e4
     LOW_ = -HIGH_
 
-
     def closure():
         model = run.model_fn()
         best_score = LOW_ if higher_is_better else HIGH_

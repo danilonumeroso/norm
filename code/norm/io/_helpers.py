@@ -56,11 +56,11 @@ def _load_torch(path: Path) -> Any:
 def _dump_yaml(obj: Any, path: Path):
     raise NotImplementedError()
 
+
 def _load_yaml(path: Path) -> Any:
     import yaml
 
     return yaml.safe_load(open(path, 'r'))
-
 
 
 IO_HELPERS = {

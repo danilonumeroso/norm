@@ -91,10 +91,10 @@ class Figure:
                 plt.legend(fontsize=self.fontsize)
 
             if self.y_scale == "log":
-                plt.yscale(self.y_scale, base=2)
+                plt.yscale(self.y_scale, base=10)
 
             if self.x_scale == "log":
-                plt.xscale(self.x_scale, base=2)
+                plt.xscale(self.x_scale, base=10)
 
             if save:
                 plt.savefig(f'{self.name}.png', dpi=self.dpi)
