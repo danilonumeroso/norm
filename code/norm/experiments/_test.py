@@ -49,6 +49,10 @@ def run_test(run: Run,
                     }
                 ))
 
+                dump(tr_scores, save_path / 'tr_scores.pkl')
+                dump(vl_scores, save_path / 'vl_scores.pkl')
+                dump(loss, save_path / 'loss.pkl')
+
                 if is_better(vl_stats['score'], best):
                     best = vl_stats['score']
                     dump(model.net_.state_dict(), save_path / f'model_{trial}.pth')

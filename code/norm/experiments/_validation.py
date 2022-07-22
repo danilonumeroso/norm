@@ -67,8 +67,6 @@ def run_valid(run: Run,
                     print("early stopping...")
                     break
 
-
-
         return losses, tr_scores, vl_scores, best_score
 
     losses, tr_scores, vl_scores, best_score = [], [], [], []
